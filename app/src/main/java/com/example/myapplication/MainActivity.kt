@@ -24,6 +24,7 @@ class MainActivity : AppCompatActivity() {
         val getData = data();
 
         val aaaaa : Int = 2000;
+        var bya = "helllo";
         Log.i("jeffrey-dbg","$tt hello world $kg, $tag,  " + getData.getVal("name"));
 
 
