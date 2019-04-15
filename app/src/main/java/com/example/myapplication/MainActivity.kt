@@ -12,6 +12,7 @@ import android.view.MenuItem
 
 import kotlinx.android.synthetic.main.activity_main.*
 import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -31,29 +32,22 @@ class MainActivity : AppCompatActivity() {
         val pm : PackageManager = MainApplication.getMainPackageManager()
         val appContext : Context = MainApplication.getMainApplicationContext()
         val list :List<ApplicationInfo> = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-            //result = Array(, {i -> "$i"})
         var result = ArrayList<String>()
-        for (info : ApplicationInfo in list) {
-            var item : String ?= pm.getApplicationLabel(info).toString();
-            Log.i("jeffrey","info name = " + item)
+        var icons = ArrayList<Drawable>()
 
-        }
         for (packageInfo in list) {
             if (pm.getLaunchIntentForPackage(packageInfo.packageName) != null) {
                 val currAppName = pm.getApplicationLabel(packageInfo).toString()
+                val currAppIcon = pm.getApplicationIcon(packageInfo.packageName)
                 result.add(currAppName)
+                icons.add(currAppIcon)
             } else {
                 //System App
             }
         }
-        if (appContext == null) {
-            Log.i("jeffrey","singleton appContext null")
-        } else {
-            Log.i("jeffrey","singleton has appContext")
-        }
 
         viewManager = GridLayoutManager(this,2)
-        viewAdapter = MyAdapter(result)
+        viewAdapter = MyAdapter(result, icons)
         recyclerView = findViewById<RecyclerView>(R.id.my_recycler_view).apply {
             // use this setting to improve performance if you know that changes
             // in content do not change the layout size of the RecyclerView

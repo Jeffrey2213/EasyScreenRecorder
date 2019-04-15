@@ -10,22 +10,16 @@ class MainApplication : Application() {
         instance = this
     }
     companion object {
-        private var instance : MainApplication ?= null;
+        private var instance : MainApplication ?= null
         fun getMainPackageManager() : PackageManager {
-            return instance!!.packageManager;
+            return instance!!.packageManager
         }
         fun getMainApplicationContext() : Context {
-            return instance!!.applicationContext;
+            return instance!!.applicationContext
         }
     }
 
     override fun onCreate() {
         super.onCreate()
     }
-
-    fun getMyString() : String{
-        return "hellloApp";
-    }
-
-
 }
