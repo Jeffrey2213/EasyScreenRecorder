@@ -3,16 +3,16 @@
               android:orientation="vertical"
               android:id="@+id/outer_layout"
               android:layout_width="match_parent"
-              android:layout_height="250dp"
+              android:layout_height="180dp"
               android:paddingLeft="5dp"
               android:paddingRight="5dp"
-              android:paddingTop="5dp"
-              android:paddingBottom="5dp">
+              android:paddingTop="10dp"
+              android:paddingBottom="10dp">
     <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/inter_layout"
-            android:background="#3E4248">
+            android:background="#642EFE">
         <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="match_parent"
@@ -21,7 +21,7 @@
                 android:layout_centerHorizontal="true">
             <ImageView
                     android:layout_width="70dp"
-                    android:layout_height="70dp"
+                    android:layout_height="60dp"
                     android:id="@+id/image_button"
                     android:layout_gravity="center"/>
             <TextView

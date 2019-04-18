@@ -13,53 +13,38 @@ import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_main.*
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.os.Handler
+import android.os.Message
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import java.lang.ref.WeakReference
 import kotlin.properties.Delegates
 
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var viewAdapter: RecyclerView.Adapter<*>
-    private lateinit var viewManager: RecyclerView.LayoutManager
+    private lateinit var mInfoManager : AppInfoManager
+    override fun onResume() {
+        super.onResume()
+
+        mInfoManager.queryAllApps()
+
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val pm : PackageManager = MainApplication.getMainPackageManager()
-        val appContext : Context = MainApplication.getMainApplicationContext()
-        val list :List<ApplicationInfo> = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-        var result = ArrayList<String>()
-        var icons = ArrayList<Drawable>()
+        var adapter = MyAdapter()
+        var viewManager = GridLayoutManager(MainApplication.getMainApplicationContext(),3)
+        var recyclerView = findViewById<RecyclerView>(R.id.my_recycler_view)
+        recyclerView.layoutManager = viewManager
+        recyclerView.adapter = adapter
 
-        for (packageInfo in list) {
-            if (pm.getLaunchIntentForPackage(packageInfo.packageName) != null) {
-                val currAppName = pm.getApplicationLabel(packageInfo).toString()
-                val currAppIcon = pm.getApplicationIcon(packageInfo.packageName)
-                result.add(currAppName)
-                icons.add(currAppIcon)
-            } else {
-                //System App
-            }
-        }
+        var uiHandler = UIHandler(recyclerView, adapter)
+        mInfoManager = AppInfoManager(uiHandler)
 
-        viewManager = GridLayoutManager(this,2)
-        viewAdapter = MyAdapter(result, icons)
-        recyclerView = findViewById<RecyclerView>(R.id.my_recycler_view).apply {
-            // use this setting to improve performance if you know that changes
-            // in content do not change the layout size of the RecyclerView
-            setHasFixedSize(true)
-
-            // use a linear layout manager
-            layoutManager = viewManager
-
-            // specify an viewAdapter (see also next example)
-            adapter = viewAdapter
-
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -75,6 +60,26 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_settings -> true
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    companion object {
+        class UIHandler : Handler {
+            private  var mRecyclerView : WeakReference<RecyclerView>
+            private  var mViewAdapter : WeakReference<MyAdapter> ?= null
+
+            constructor(recyclerView : RecyclerView, adapter : MyAdapter) {
+                mRecyclerView = WeakReference(recyclerView)
+                mViewAdapter = WeakReference(adapter)
+            }
+
+            override fun handleMessage(msg: Message?) {
+                super.handleMessage(msg)
+                var appList : ArrayList<AppInfo> = msg!!.obj as ArrayList<AppInfo>
+                mViewAdapter!!.get()?.updateData(appList)
+                mRecyclerView!!.get()!!.adapter!!.notifyItemChanged(appList.size)
+            }
+
         }
     }
 }

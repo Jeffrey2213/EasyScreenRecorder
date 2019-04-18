@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
 import android.support.v7.widget.RecyclerView
 import android.util.Log
@@ -20,7 +21,7 @@ import android.graphics.drawable.GradientDrawable
 
 
 
-class MyAdapter(val myDataset : ArrayList<String>, var myImage : ArrayList<Drawable>) :
+class MyAdapter :
     RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
 
     // Provide a reference to the views for each data item
@@ -29,6 +30,7 @@ class MyAdapter(val myDataset : ArrayList<String>, var myImage : ArrayList<Drawa
     // Each data item is just a string in this case that is shown in a TextView.
     class MyViewHolder(val view: View) : RecyclerView.ViewHolder(view)
 
+    private var mAppInfoList : ArrayList<AppInfo> = ArrayList<AppInfo>()
 
     // Create new views (invoked by the layout manager)
     override fun onCreateViewHolder(parent: ViewGroup,
@@ -45,13 +47,17 @@ class MyAdapter(val myDataset : ArrayList<String>, var myImage : ArrayList<Drawa
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-        val color = Color.argb(255,  Random().nextInt(256),  Random().nextInt(256),  Random().nextInt(256))
+        //val color = Color.argb(255,  Random().nextInt(256),  Random().nextInt(256),  Random().nextInt(256))
 
-        holder.view.item_title.text = myDataset!!.get(position)
-        holder.view.image_button.setImageDrawable(myImage!!.get(position))
-        holder.view.inter_layout.setBackgroundColor(color)
+        holder.view.item_title.text = mAppInfoList.get(position).getName()
+        holder.view.image_button.setImageDrawable(mAppInfoList.get(position).getIcon())
+        //holder.view.inter_layout.setBackgroundColor(color)
     }
 
     // Return the size of your dataset (invoked by the layout manager)
-    override fun getItemCount() = myDataset!!.size
+    override fun getItemCount() = mAppInfoList.size
+
+    fun updateData(list : ArrayList<AppInfo>) {
+        mAppInfoList = list
+    }
 }
