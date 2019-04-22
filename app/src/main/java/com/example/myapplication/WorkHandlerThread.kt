@@ -18,11 +18,11 @@ class WorkHandlerThread(var UIHandler : Handler, var pm : PackageManager): Handl
         const val MSG_QUERY_ALL_APPS = 1
         const val MSG_QUERY_A_APP = 2
     }
-    override fun onLooperPrepared() {
-        super.onLooperPrepared()
-        mWorkHandler = getHandler(looper)
-    }
+
     public fun queryAllApps() {
+        if (mWorkHandler == null) {
+            mWorkHandler = getHandler(looper)
+        }
         var msg = Message()
         mWorkHandler?.sendMessage(msg)
     }
@@ -46,6 +46,7 @@ class WorkHandlerThread(var UIHandler : Handler, var pm : PackageManager): Handl
                         //System App
                     }
                 }
+                Log.i("jeffrey-dbg","appInfo.size = " +appInfoList.size +", " + appInfoList.get(0).getName())
                 var uimsg = Message()
                 uimsg.obj = appInfoList
                 UIHandler.sendMessage(uimsg)

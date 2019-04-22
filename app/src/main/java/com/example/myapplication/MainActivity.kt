@@ -15,35 +15,31 @@ import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Message
-import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
-import java.lang.ref.WeakReference
-import kotlin.properties.Delegates
+import android.support.design.widget.TabLayout
+import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentManager
+import android.support.v4.app.FragmentPagerAdapter
+import android.support.v4.view.ViewPager
+import android.support.v7.widget.Toolbar
+import android.view.View
 
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var mInfoManager : AppInfoManager
+    private var tabLayout: TabLayout? = null
+    private var viewPager: ViewPager? = null
+
     override fun onResume() {
         super.onResume()
-
-        mInfoManager.queryAllApps()
-
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        var adapter = MyAdapter()
-        var viewManager = GridLayoutManager(MainApplication.getMainApplicationContext(),3)
-        var recyclerView = findViewById<RecyclerView>(R.id.my_recycler_view)
-        recyclerView.layoutManager = viewManager
-        recyclerView.adapter = adapter
+        viewPager = findViewById(R.id.viewpager)
 
-        var uiHandler = UIHandler(recyclerView, adapter)
-        mInfoManager = AppInfoManager(uiHandler)
+        setupViewPager(viewPager!!)
 
     }
 
@@ -63,23 +59,35 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupViewPager(viewPager: ViewPager) {
+        val adapter = ViewPagerAdapter(supportFragmentManager)
+        adapter.addFragment(FavoriteAppsFragment(), "Favorite")
+        adapter.addFragment(AllAppsFragment(), "ALL")
+        viewPager.adapter = adapter
+    }
+
     companion object {
-        class UIHandler : Handler {
-            private  var mRecyclerView : WeakReference<RecyclerView>
-            private  var mViewAdapter : WeakReference<MyAdapter> ?= null
+        class ViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager) {
+            private val mFragmentList = ArrayList<Fragment>()
+            private val mFragmentTitleList = ArrayList<String>()
 
-            constructor(recyclerView : RecyclerView, adapter : MyAdapter) {
-                mRecyclerView = WeakReference(recyclerView)
-                mViewAdapter = WeakReference(adapter)
+            override fun getItem(position: Int): Fragment {
+                return mFragmentList[position]
             }
 
-            override fun handleMessage(msg: Message?) {
-                super.handleMessage(msg)
-                var appList : ArrayList<AppInfo> = msg!!.obj as ArrayList<AppInfo>
-                mViewAdapter!!.get()?.updateData(appList)
-                mRecyclerView!!.get()!!.adapter!!.notifyItemChanged(appList.size)
+            override fun getCount(): Int {
+                return mFragmentList.size
             }
 
+            fun addFragment(fragment: Fragment, title: String) {
+                mFragmentList.add(fragment)
+                mFragmentTitleList.add(title)
+            }
+
+            override fun getPageTitle(position: Int): CharSequence {
+                return mFragmentTitleList[position]
+            }
         }
+
     }
 }

@@ -21,17 +21,25 @@ import android.graphics.drawable.GradientDrawable
 
 
 
-class MyAdapter :
-    RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
+class MyAdapter  :
+    RecyclerView.Adapter<MyAdapter.MyViewHolder> {
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
     // you provide access to all the views for a data item in a view holder.
     // Each data item is just a string in this case that is shown in a TextView.
-    class MyViewHolder(val view: View) : RecyclerView.ViewHolder(view)
+    public class MyViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
+        var appIcon: ImageView = view.findViewById(R.id.image_button)
+        var appName: TextView = view.findViewById(R.id.item_title)
+    }
+
 
     private var mAppInfoList : ArrayList<AppInfo> = ArrayList<AppInfo>()
+    private var item : ItemClick ?= null;
 
+    constructor(appInfoList : ArrayList<AppInfo>) {
+        mAppInfoList = appInfoList
+    }
     // Create new views (invoked by the layout manager)
     override fun onCreateViewHolder(parent: ViewGroup,
                                     viewType: Int): MyAdapter.MyViewHolder {
@@ -40,6 +48,7 @@ class MyAdapter :
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.my_text_view, parent, false)
         // set the view's size, margins, paddings and layout parameters
+        view.setOnClickListener(onClick())
         return MyViewHolder(view)
     }
 
@@ -48,10 +57,9 @@ class MyAdapter :
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         //val color = Color.argb(255,  Random().nextInt(256),  Random().nextInt(256),  Random().nextInt(256))
-
-        holder.view.item_title.text = mAppInfoList.get(position).getName()
-        holder.view.image_button.setImageDrawable(mAppInfoList.get(position).getIcon())
-        //holder.view.inter_layout.setBackgroundColor(color)
+        holder.appName.text = mAppInfoList.get(position).getName()
+        holder.appIcon.setImageDrawable(mAppInfoList.get(position).getIcon())
+        holder.view.tag = position
     }
 
     // Return the size of your dataset (invoked by the layout manager)
@@ -59,5 +67,16 @@ class MyAdapter :
 
     fun updateData(list : ArrayList<AppInfo>) {
         mAppInfoList = list
+    }
+
+    inner class onClick : View.OnClickListener{
+        override fun onClick(v: View?) {
+            var positon:Int= v!!.getTag() as Int
+            item!!.OnItemClick(v,positon)
+        }
+
+    }
+    fun setClickListener(item : ItemClick) {
+        this.item = item
     }
 }
