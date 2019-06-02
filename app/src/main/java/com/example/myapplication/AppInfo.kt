@@ -1,19 +1,31 @@
 package com.example.myapplication
 
+import android.content.Intent
 import android.graphics.drawable.Drawable
 
 class AppInfo {
     private var mAppName : String ?= null
     private var mAppIcon : Drawable ?= null
-    constructor(appName : String, appIcon : Drawable) {
+    private var mPackageName : String ?= null
+    private var mFavorite : Boolean = false
+
+    constructor(appName : String, appIcon : Drawable, packageName : String) {
         mAppName = appName
         mAppIcon = appIcon
+        mPackageName = packageName
     }
-    public fun getName() : String {
+    fun getName() : String {
         return mAppName!!
     }
-    public fun getIcon() : Drawable {
+    fun getIcon() : Drawable {
         return mAppIcon!!
     }
+    fun getPackageName() : String {
+        return mPackageName!!
+    }
+    fun setFavorite(enable : Boolean) {
+        mFavorite = enable
+    }
+
 
 }

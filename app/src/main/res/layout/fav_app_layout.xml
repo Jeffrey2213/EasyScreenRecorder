@@ -3,32 +3,44 @@
               android:orientation="vertical"
               android:id="@+id/outer_layout"
               android:layout_width="match_parent"
-              android:layout_height="130dp"
-              android:paddingLeft="5dp"
-              android:paddingRight="5dp"
-              android:paddingTop="5dp"
-              android:paddingBottom="5dp">
+              android:layout_height="110dp"
+              android:scaleType="center"
+              android:paddingLeft="3dp"
+              android:paddingRight="3dp"
+              android:paddingTop="14dp"
+              android:paddingBottom="3dp"
+              android:background="@drawable/click">
     <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/inter_layout"
-            android:background="#642EFE">
+            android:scaleType="center"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+               >
         <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_centerVertical="true"
+                android:scaleType="center"
+                android:id="@+id/linearlayout"
                 android:layout_centerHorizontal="true">
             <ImageView
-                    android:layout_width="70dp"
-                    android:layout_height="60dp"
+                    android:layout_width="45dp"
+                    android:layout_height="40dp"
                     android:id="@+id/image_button"
+                    android:clickable="true"
                     android:layout_gravity="center"/>
             <TextView
-                    android:layout_width="match_parent"
+                    android:layout_marginTop="23dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="#ffffff"
                     android:text="New Text"
+                    android:textSize="8sp"
                     android:id="@+id/item_title"
                     android:gravity="center"/>
         </LinearLayout>

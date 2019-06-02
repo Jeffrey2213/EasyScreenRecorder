@@ -12,17 +12,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlin.properties.Delegates
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.TextView
-import kotlinx.android.synthetic.main.my_text_view.view.*
+import kotlinx.android.synthetic.main.fav_app_layout.view.*
 import java.util.*
 import android.graphics.drawable.GradientDrawable
+import android.widget.*
 
 
-
-class MyAdapter  :
-    RecyclerView.Adapter<MyAdapter.MyViewHolder> {
+class MyAdapter : RecyclerView.Adapter<MyAdapter.MyViewHolder> {
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -31,6 +27,8 @@ class MyAdapter  :
     public class MyViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
         var appIcon: ImageView = view.findViewById(R.id.image_button)
         var appName: TextView = view.findViewById(R.id.item_title)
+        var outerLayout : LinearLayout = view.findViewById(R.id.outer_layout)
+        var interLayout : LinearLayout = view.findViewById(R.id.linearlayout)
     }
 
 
@@ -46,9 +44,8 @@ class MyAdapter  :
 
         // create a new view
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.my_text_view, parent, false)
+            .inflate(R.layout.fav_app_layout, parent, false)
         // set the view's size, margins, paddings and layout parameters
-        view.setOnClickListener(onClick())
         return MyViewHolder(view)
     }
 
@@ -57,9 +54,15 @@ class MyAdapter  :
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         //val color = Color.argb(255,  Random().nextInt(256),  Random().nextInt(256),  Random().nextInt(256))
-        holder.appName.text = mAppInfoList.get(position).getName()
-        holder.appIcon.setImageDrawable(mAppInfoList.get(position).getIcon())
-        holder.view.tag = position
+        holder.appIcon.setImageDrawable(mAppInfoList[position].getIcon())
+        holder.appName.text = mAppInfoList[position].getName()
+        holder.appIcon.tag = position
+        holder.appName.tag = position
+        holder.outerLayout.tag = position
+
+        holder.outerLayout.setOnClickListener(onClick())
+        holder.appIcon.setOnClickListener(onClick())
+        holder.appName.setOnClickListener(onClick())
     }
 
     // Return the size of your dataset (invoked by the layout manager)
@@ -70,9 +73,9 @@ class MyAdapter  :
     }
 
     inner class onClick : View.OnClickListener{
-        override fun onClick(v: View?) {
-            var positon:Int= v!!.getTag() as Int
-            item!!.OnItemClick(v,positon)
+        override fun onClick(v: View) {
+           var position = v.tag as Int
+            item!!.OnItemClick(v, position)
         }
 
     }
