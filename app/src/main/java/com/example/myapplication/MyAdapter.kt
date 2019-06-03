@@ -16,6 +16,7 @@ import kotlinx.android.synthetic.main.fav_app_layout.view.*
 import java.util.*
 import android.graphics.drawable.GradientDrawable
 import android.widget.*
+import java.lang.ref.WeakReference
 
 
 class MyAdapter : RecyclerView.Adapter<MyAdapter.MyViewHolder> {
@@ -33,8 +34,7 @@ class MyAdapter : RecyclerView.Adapter<MyAdapter.MyViewHolder> {
 
 
     private var mAppInfoList : ArrayList<AppInfo> = ArrayList<AppInfo>()
-    private var item : ItemClick ?= null;
-
+    private lateinit var mItemClick : ItemClick
     constructor(appInfoList : ArrayList<AppInfo>) {
         mAppInfoList = appInfoList
     }
@@ -60,26 +60,38 @@ class MyAdapter : RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         holder.appName.tag = position
         holder.outerLayout.tag = position
 
-        holder.outerLayout.setOnClickListener(onClick())
-        holder.appIcon.setOnClickListener(onClick())
-        holder.appName.setOnClickListener(onClick())
+        if (mItemClick != null) {
+            holder.outerLayout.setOnClickListener(onClick(mItemClick))
+            holder.appIcon.setOnClickListener(onClick(mItemClick))
+            holder.appName.setOnClickListener(onClick(mItemClick))
+        }
     }
 
     // Return the size of your dataset (invoked by the layout manager)
     override fun getItemCount() = mAppInfoList.size
 
     fun updateData(list : ArrayList<AppInfo>) {
-        mAppInfoList = list
+        var appInfoList =  ArrayList<AppInfo>()
+        appInfoList.addAll(list)
+        mAppInfoList = appInfoList
     }
 
-    inner class onClick : View.OnClickListener{
-        override fun onClick(v: View) {
-           var position = v.tag as Int
-            item!!.OnItemClick(v, position)
-        }
-
-    }
     fun setClickListener(item : ItemClick) {
-        this.item = item
+        mItemClick = item
     }
+
+    companion object {
+        class onClick : View.OnClickListener {
+            private var mItem: WeakReference<ItemClick>
+            constructor(item: ItemClick) {
+                mItem = WeakReference(item)
+            }
+            override fun onClick(v: View) {
+                var position = v.tag as Int
+                mItem.get()!!.OnItemClick(v, position)
+            }
+
+        }
+    }
+
 }

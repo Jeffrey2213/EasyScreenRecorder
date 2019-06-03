@@ -16,9 +16,7 @@ class AppInfoModel(var UIHandler : Handler, var pm : PackageManager): HandlerThr
 
     companion object {
         const val MSG_QUERY_ALL_APPS = 1
-        const val MSG_QUERY_ALL_APPS_BY_KEYWORD = 2
     }
-
 
     fun queryAllApps() {
         if (mWorkHandler == null) {
@@ -27,17 +25,6 @@ class AppInfoModel(var UIHandler : Handler, var pm : PackageManager): HandlerThr
         mWorkHandler?.removeMessages(MSG_QUERY_ALL_APPS)
         var msg = Message()
         msg.what = MSG_QUERY_ALL_APPS
-        mWorkHandler?.sendMessage(msg)
-    }
-
-    fun addToFavorite(keyword : String) {
-        if (mWorkHandler == null) {
-            mWorkHandler = getHandler(looper)
-        }
-        mWorkHandler?.removeMessages(MSG_QUERY_ALL_APPS_BY_KEYWORD)
-        var msg = Message()
-        msg.obj = keyword
-        msg.what = MSG_QUERY_ALL_APPS_BY_KEYWORD
         mWorkHandler?.sendMessage(msg)
     }
 
@@ -60,21 +47,6 @@ class AppInfoModel(var UIHandler : Handler, var pm : PackageManager): HandlerThr
                             }
                         }
                     }
-                    MSG_QUERY_ALL_APPS_BY_KEYWORD -> {
-                        var keyword = msg.obj as String
-                        for (packageInfo in list) {
-                            if (pm.getLaunchIntentForPackage(packageInfo.packageName) != null) {
-                                val appName = pm.getApplicationLabel(packageInfo).toString()
-                                if (appName != null && appName.toLowerCase().contains(keyword.toLowerCase())) {
-                                    val appIcon = pm.getApplicationIcon(packageInfo.packageName)
-                                    val packageName = packageInfo.packageName
-
-                                    var appInfo = AppInfo(appName, appIcon, packageName)
-                                    mAppInfoList.add(appInfo)
-                                }
-                            }
-                        }
-                    }
                 }
                 sendMessage(UIHandler, mAppInfoList)
 
@@ -89,6 +61,7 @@ class AppInfoModel(var UIHandler : Handler, var pm : PackageManager): HandlerThr
                 if (UIHandler is FavoriteAppsFragment.Companion.UIHandler) {
                     var uimsg = Message()
                     uimsg.obj = appInfoList
+                    uimsg.what = FavoriteAppsFragment.MSG_UPDATE_APPINFO
                     UIHandler.sendMessage(uimsg)
                 }
             }

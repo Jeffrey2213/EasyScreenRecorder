@@ -53,8 +53,10 @@ class NaviAdapter : BaseAdapter {
         return mAppInfoList.size
     }
 
-    public fun updateData(list : ArrayList<AppInfo>) {
-        mAppInfoList = list
+    fun updateData(list : ArrayList<AppInfo>) {
+        var appInfoList =  ArrayList<AppInfo>()
+        appInfoList.addAll(list)
+        mAppInfoList = appInfoList
     }
 
     fun filter(keyword: String) {

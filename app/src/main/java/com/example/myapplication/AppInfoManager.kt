@@ -9,6 +9,7 @@ class AppInfoManager (UIHandler : Handler) {
         mAppInfoModel = AppInfoModel(UIHandler, MainApplication.getMainPackageManager())
         mAppInfoModel.start()
     }
+
     fun queryAllApps() {
         mAppInfoModel.queryAllApps()
     }

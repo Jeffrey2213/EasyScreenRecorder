@@ -14,31 +14,35 @@ import android.view.View
 import android.view.ViewGroup
 import java.lang.ref.WeakReference
 
-class FavoriteAppsFragment: Fragment {
+class FavoriteAppsFragment() : Fragment() {
     private lateinit var mInfoManager : AppInfoManager
     private var mAppInfoList : ArrayList<AppInfo> = ArrayList<AppInfo>()
-    private var mMainUIHandler :Handler
-    private lateinit var mFavoriteUIHandler : Handler
-    constructor(handler : Handler) {
-        mMainUIHandler = handler
+    private lateinit var mMainUIHandler : WeakReference<Handler>
+    private lateinit var mFavoriteUIHandler : UIHandler
+    private lateinit var mAdapter: MyAdapter
+    private lateinit var mClickListener : AppInfoItemClickListener
+    fun setMainHandler (handler : Handler) {
+        mMainUIHandler = WeakReference(handler)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Get the custom view for this fragment layout
         val view = inflater!!.inflate(R.layout.favoriteapps_fragment, container, false)
-        var clickListener = AppInfoItemClickListener(mAppInfoList, mMainUIHandler!!)
+        mClickListener = AppInfoItemClickListener(mAppInfoList, mMainUIHandler.get()!!)
 
-        var adapter = MyAdapter(mAppInfoList)
+        mAdapter = MyAdapter(mAppInfoList)
         var viewManager = GridLayoutManager(MainApplication.getMainApplicationContext(),4)
         var recyclerView = view.findViewById<RecyclerView>(R.id.favoriteapps_recyclerview)
 
-        adapter.setClickListener(clickListener)
+        mAdapter.setClickListener(mClickListener)
 
         recyclerView.layoutManager = viewManager
-        recyclerView.adapter = adapter
+        recyclerView.adapter = mAdapter
 
-        mFavoriteUIHandler = UIHandler(recyclerView, adapter, clickListener)
+        mFavoriteUIHandler = UIHandler(recyclerView, mClickListener)
+        mFavoriteUIHandler.setAdapter(mAdapter)
         mInfoManager = AppInfoManager(mFavoriteUIHandler)
+
 
         // Return the fragment view/layout
 
@@ -47,6 +51,7 @@ class FavoriteAppsFragment: Fragment {
 
     override fun onResume() {
         super.onResume()
+        mFavoriteUIHandler.setAdapter(mAdapter)
         mInfoManager.queryAllApps()
         LocalBroadcastManager.getInstance(MainApplication.getMainApplicationContext())
             .registerReceiver(Receiver(mFavoriteUIHandler), IntentFilter(ADD_TO_FAVORITE))
@@ -65,17 +70,19 @@ class FavoriteAppsFragment: Fragment {
         class UIHandler : Handler {
             private  var mFavorite = ArrayList<String>()
             private  var mRecyclerView : WeakReference<RecyclerView>
-            private  var mViewAdapter : WeakReference<MyAdapter> ?= null
-            private  var mItemClick : WeakReference<AppInfoItemClickListener> ?= null
+            private  lateinit var mViewAdapter : MyAdapter
+            private  var mItemClick : AppInfoItemClickListener
             private  var mAppList : ArrayList<AppInfo> ?= null
-            constructor(recyclerView : RecyclerView, adapter : MyAdapter, listener : AppInfoItemClickListener) {
+            constructor(recyclerView : RecyclerView, listener : AppInfoItemClickListener) {
                 mRecyclerView = WeakReference(recyclerView)
-                mViewAdapter = WeakReference(adapter)
-                mItemClick = WeakReference(listener)
+                mItemClick = listener
                 var default = MainApplication.getMainApplicationContext().getResources().getStringArray(R.array.default_list);
                 for (app : String in default) {
                     mFavorite.add(app)
                 }
+            }
+            fun setAdapter (adapter : MyAdapter) {
+                mViewAdapter = adapter
             }
 
             override fun handleMessage(msg: Message) {
@@ -84,6 +91,7 @@ class FavoriteAppsFragment: Fragment {
                     MSG_UPDATE_APPINFO -> {
                         var appList: ArrayList<AppInfo> = msg!!.obj as ArrayList<AppInfo>
                         var navList: ArrayList<AppInfo> = ArrayList<AppInfo>()
+                        var templist = ArrayList<AppInfo>()
                         if (appList != null) {
                             for (appInfo: AppInfo in appList) {
                                 for (favorite: String in mFavorite) {
@@ -92,10 +100,16 @@ class FavoriteAppsFragment: Fragment {
                                     }
                                 }
                             }
-                            mViewAdapter!!.get()!!.updateData(navList)
-                            mItemClick!!.get()!!.updateData(navList)
-                            mRecyclerView!!.get()!!.adapter!!.notifyDataSetChanged()
-                            mAppList = appList
+
+                            templist.addAll(appList)
+                            mAppList = templist
+
+                            if (mViewAdapter != null && mRecyclerView != null && mItemClick != null) {
+                                mViewAdapter.updateData(navList)
+                                mItemClick.updateData(navList)
+                                mRecyclerView.get()!!.adapter!!.notifyDataSetChanged()
+                            }
+
                         }
                     }
 
@@ -116,13 +130,14 @@ class FavoriteAppsFragment: Fragment {
                                     for (favorite: String in mFavorite) {
                                         if (appInfo.getPackageName().toLowerCase().compareTo(favorite.toLowerCase()) == 0) {
                                             navList.add(appInfo)
-                                            Log.i("jeffrey-dbg","appInfo = " + appInfo.getName() +", pkg = " + appInfo.getName())
                                         }
                                     }
                                 }
-                                mViewAdapter!!.get()!!.updateData(navList)
-                                mItemClick!!.get()!!.updateData(navList)
-                                mRecyclerView!!.get()!!.adapter!!.notifyDataSetChanged()
+                                if (mViewAdapter != null && mRecyclerView != null && mItemClick != null) {
+                                    mViewAdapter.updateData(navList)
+                                    mItemClick.updateData(navList)
+                                    mRecyclerView!!.get()!!.adapter!!.notifyDataSetChanged()
+                                }
                             }
                         }
 
@@ -132,15 +147,15 @@ class FavoriteAppsFragment: Fragment {
         }
 
         class AppInfoItemClickListener: ItemClick{
-            private var mAppInfoList : WeakReference<ArrayList<AppInfo>>
+            private lateinit var mAppInfoList : ArrayList<AppInfo>
             private var mMainUIHandler : Handler ?= null
             constructor(appInfoList : ArrayList<AppInfo>, handler : Handler) {
-                mAppInfoList = WeakReference(appInfoList)
+                copyList(appInfoList)
                 mMainUIHandler = handler
             }
             override fun OnItemClick(v: View, position: Int) {
-                if (mAppInfoList != null && mAppInfoList!!.get()!!.size > 0) {
-                    val packageName = mAppInfoList.get()!!.get(position).getPackageName()
+                if (mAppInfoList != null) {
+                    val packageName = mAppInfoList.get(position).getPackageName()
                     var message = Message()
                     message.obj = packageName
                     message.what = MainActivity.Companion.MainUIHandler.MSG_LAUNCH_APP
@@ -148,7 +163,12 @@ class FavoriteAppsFragment: Fragment {
                 }
             }
             fun updateData(appInfoList: ArrayList<AppInfo>) {
-                mAppInfoList = WeakReference(appInfoList)
+                copyList(appInfoList)
+            }
+            private fun copyList(list : ArrayList<AppInfo>) {
+                var tmp = ArrayList<AppInfo>()
+                tmp.addAll(list)
+                mAppInfoList = tmp
             }
         }
 

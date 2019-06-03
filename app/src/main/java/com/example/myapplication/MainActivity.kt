@@ -49,10 +49,12 @@ class MainActivity : AppCompatActivity() {
     private var mAppInfoList: ArrayList<AppInfo> = ArrayList<AppInfo>()
     private lateinit var mEditText : EditText
     private lateinit var mNaviHandler : NavUIHandler
-    private var mFragment : Fragment ?= null
+    private lateinit var mFragment: FavoriteAppsFragment
+    private lateinit var mMainHandler: Handler
 
     override fun onResume() {
         super.onResume()
+        mFragment.setMainHandler(mMainHandler)
         mInfoManager.queryAllApps()
     }
 
@@ -63,14 +65,14 @@ class MainActivity : AppCompatActivity() {
         viewPager = findViewById(R.id.viewpager)
         val navigationView: NavigationView = findViewById(R.id.nav_view)
         var drawerLayout : DrawerLayout = findViewById(R.id.drawer_layout)
-        val mainUIHandler = MainUIHandler()
+        mMainHandler = MainUIHandler()
 
-        setupViewPager(viewPager!!, mainUIHandler)
+        setupViewPager(viewPager!!)
 
         // navigation view init
         var navMenu = navigationView.menu.addSubMenu("All apps")
         var naviAdapter = NaviAdapter()
-        mNaviHandler = NavUIHandler(naviAdapter, mainUIHandler)
+        mNaviHandler = NavUIHandler(naviAdapter, mMainHandler)
         //var listener = NaviSelectorListener(nvUIHandler, drawerLayout)
         val navlist : ListView = findViewById(R.id.nav_list)
         val navListListener = NaviListItemClickListener(mNaviHandler, naviAdapter,drawerLayout)
@@ -110,10 +112,10 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun setupViewPager(viewPager: ViewPager, handler : Handler) {
+    private fun setupViewPager(viewPager: ViewPager) {
         val adapter = ViewPagerAdapter(supportFragmentManager)
-        mFragment = FavoriteAppsFragment(handler)
-        adapter.addFragment(mFragment!! , "Favorite")
+        mFragment = FavoriteAppsFragment()
+        adapter.addFragment(mFragment , "Favorite")
         viewPager.adapter = adapter
     }
 
@@ -146,7 +148,7 @@ class MainActivity : AppCompatActivity() {
 
         class MainUIHandler : Handler() {
             companion object {
-                public var MSG_LAUNCH_APP = 0
+                var MSG_LAUNCH_APP = 0
             }
             override fun handleMessage(msg: Message) {
                 super.handleMessage(msg)
@@ -179,7 +181,7 @@ class MainActivity : AppCompatActivity() {
                     MSG_UPDATE_APPINFO -> {
                         var appList: ArrayList<AppInfo> = msg!!.obj as ArrayList<AppInfo>
                         appList.sortBy { it.getName() }
-                        mAppInfoList = appList
+                        copyList(appList)
                         mAdapter.updateData(appList)
                         mAdapter.notifyDataSetChanged()
                     }
@@ -199,6 +201,11 @@ class MainActivity : AppCompatActivity() {
                 msg.obj = title
                 msg.what = MainUIHandler.MSG_LAUNCH_APP
                 mMainHandler.get()!!.sendMessage(msg)
+            }
+            private fun copyList(src : ArrayList<AppInfo>) {
+                var tmp = ArrayList<AppInfo> ()
+                tmp.addAll(src)
+                mAppInfoList = tmp
             }
 
         }
