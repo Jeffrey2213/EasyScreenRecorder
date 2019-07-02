@@ -54,7 +54,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        mFragment.setMainHandler(mMainHandler)
         mInfoManager.queryAllApps()
     }
 
@@ -66,8 +65,9 @@ class MainActivity : AppCompatActivity() {
         val navigationView: NavigationView = findViewById(R.id.nav_view)
         var drawerLayout : DrawerLayout = findViewById(R.id.drawer_layout)
         mMainHandler = MainUIHandler()
-
+        MainApplication.setMainActivityHandler(mMainHandler)
         setupViewPager(viewPager!!)
+        //mFragment.setMainHandler(mMainHandler)
 
         // navigation view init
         var navMenu = navigationView.menu.addSubMenu("All apps")
@@ -82,6 +82,7 @@ class MainActivity : AppCompatActivity() {
         mInfoManager = AppInfoManager(mNaviHandler)
         mEditText = initalEditText(mInfoManager, naviAdapter)
         navigationView.addHeaderView(mEditText)
+
         //navigationView.setNavigationItemSelectedListener (listener)
         //navigationView.itemIconTintList = null
     }

@@ -35,6 +35,7 @@ class MyAdapter : RecyclerView.Adapter<MyAdapter.MyViewHolder> {
 
     private var mAppInfoList : ArrayList<AppInfo> = ArrayList<AppInfo>()
     private lateinit var mItemClick : ItemClick
+
     constructor(appInfoList : ArrayList<AppInfo>) {
         mAppInfoList = appInfoList
     }
@@ -61,9 +62,13 @@ class MyAdapter : RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         holder.outerLayout.tag = position
 
         if (mItemClick != null) {
-            holder.outerLayout.setOnClickListener(onClick(mItemClick))
-            holder.appIcon.setOnClickListener(onClick(mItemClick))
-            holder.appName.setOnClickListener(onClick(mItemClick))
+            var clickListener = onClick(mItemClick)
+            if (clickListener != null) {
+                holder.outerLayout.setOnClickListener(clickListener)
+                holder.outerLayout.setOnLongClickListener(clickListener)
+                holder.appIcon.setOnClickListener(clickListener)
+                holder.appName.setOnClickListener(clickListener)
+            }
         }
     }
 
@@ -81,7 +86,7 @@ class MyAdapter : RecyclerView.Adapter<MyAdapter.MyViewHolder> {
     }
 
     companion object {
-        class onClick : View.OnClickListener {
+        class onClick : View.OnClickListener, View.OnLongClickListener {
             private var mItem: WeakReference<ItemClick>
             constructor(item: ItemClick) {
                 mItem = WeakReference(item)
@@ -91,6 +96,12 @@ class MyAdapter : RecyclerView.Adapter<MyAdapter.MyViewHolder> {
                 mItem.get()!!.OnItemClick(v, position)
             }
 
+            override fun onLongClick(v: View): Boolean {
+                Log.i("jeffrey-dbg","longClick")
+                var position = v.tag as Int
+                mItem.get()!!.OnItemLongClick(v, position)
+                return true
+            }
         }
     }
 

@@ -10,25 +10,24 @@ import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
 import java.lang.ref.WeakReference
 
 class FavoriteAppsFragment() : Fragment() {
     private lateinit var mInfoManager : AppInfoManager
     private var mAppInfoList : ArrayList<AppInfo> = ArrayList<AppInfo>()
-    private lateinit var mMainUIHandler : WeakReference<Handler>
     private lateinit var mFavoriteUIHandler : UIHandler
     private lateinit var mAdapter: MyAdapter
     private lateinit var mClickListener : AppInfoItemClickListener
-    fun setMainHandler (handler : Handler) {
-        mMainUIHandler = WeakReference(handler)
-    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Get the custom view for this fragment layout
         val view = inflater!!.inflate(R.layout.favoriteapps_fragment, container, false)
-        mClickListener = AppInfoItemClickListener(mAppInfoList, mMainUIHandler.get()!!)
+        mClickListener = AppInfoItemClickListener(mAppInfoList,
+            MainApplication.getMainActivityHandler())
 
         mAdapter = MyAdapter(mAppInfoList)
         var viewManager = GridLayoutManager(MainApplication.getMainApplicationContext(),4)
@@ -43,7 +42,7 @@ class FavoriteAppsFragment() : Fragment() {
         mFavoriteUIHandler.setAdapter(mAdapter)
         mInfoManager = AppInfoManager(mFavoriteUIHandler)
 
-
+        mClickListener.setFavoriteHandler(mFavoriteUIHandler)
         // Return the fragment view/layout
 
         return view
@@ -67,6 +66,8 @@ class FavoriteAppsFragment() : Fragment() {
         var ADD_TO_FAVORITE = "com.example.myapplication.addtofavorite"
         var MSG_UPDATE_APPINFO = 0
         var MSG_ADD_FAVORITE = 1
+        var MSG_REMOVE_FAVORITE = 2
+
         class UIHandler : Handler {
             private  var mFavorite = ArrayList<String>()
             private  var mRecyclerView : WeakReference<RecyclerView>
@@ -142,16 +143,39 @@ class FavoriteAppsFragment() : Fragment() {
                         }
 
                     }
+
+                    MSG_REMOVE_FAVORITE -> {
+                        var removePosition = msg.arg1
+                        mFavorite.removeAt(removePosition)
+
+                        var navList: ArrayList<AppInfo> = ArrayList<AppInfo>()
+                        if (mAppList!! != null && !mAppList!!.isEmpty()) {
+                            for (appInfo: AppInfo in mAppList!!) {
+                                for (favorite: String in mFavorite) {
+                                    if (appInfo.getPackageName().toLowerCase().compareTo(favorite.toLowerCase()) == 0) {
+                                        navList.add(appInfo)
+                                    }
+                                }
+                            }
+                            if (mViewAdapter != null && mRecyclerView != null && mItemClick != null) {
+                                mViewAdapter.updateData(navList)
+                                mItemClick.updateData(navList)
+                                mRecyclerView!!.get()!!.adapter!!.notifyDataSetChanged()
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        class AppInfoItemClickListener: ItemClick{
+        class AppInfoItemClickListener: ItemClick, PopupMenu.OnMenuItemClickListener {
             private lateinit var mAppInfoList : ArrayList<AppInfo>
-            private var mMainUIHandler : Handler ?= null
+            private var mMainUIHandler : WeakReference<Handler>
+            private lateinit var mFavoriteHandler : WeakReference<UIHandler>
+            private var mLongPressPosition = 0
             constructor(appInfoList : ArrayList<AppInfo>, handler : Handler) {
                 copyList(appInfoList)
-                mMainUIHandler = handler
+                mMainUIHandler = WeakReference(handler)
             }
             override fun OnItemClick(v: View, position: Int) {
                 if (mAppInfoList != null) {
@@ -159,8 +183,15 @@ class FavoriteAppsFragment() : Fragment() {
                     var message = Message()
                     message.obj = packageName
                     message.what = MainActivity.Companion.MainUIHandler.MSG_LAUNCH_APP
-                    mMainUIHandler!!.sendMessage(message)
+                    mMainUIHandler.get()!!.sendMessage(message)
                 }
+            }
+            override fun OnItemLongClick(v: View, position: Int) {
+                mLongPressPosition = position
+                var popMenu = PopupMenu(MainApplication.getMainApplicationContext(), v)
+                popMenu.setOnMenuItemClickListener(this)
+                popMenu.inflate(R.menu.menu_remove_uninstall)
+                popMenu.show()
             }
             fun updateData(appInfoList: ArrayList<AppInfo>) {
                 copyList(appInfoList)
@@ -169,6 +200,16 @@ class FavoriteAppsFragment() : Fragment() {
                 var tmp = ArrayList<AppInfo>()
                 tmp.addAll(list)
                 mAppInfoList = tmp
+            }
+            override fun onMenuItemClick(item: MenuItem?): Boolean {
+                Log.i("jeffrey-dbg","fragment longpress = " + mLongPressPosition)
+                var message = mFavoriteHandler.get()!!.obtainMessage(MSG_REMOVE_FAVORITE)
+                message.arg1 = mLongPressPosition
+                mFavoriteHandler.get()!!.sendMessage(message)
+                return true
+            }
+            fun setFavoriteHandler(favHandler : UIHandler) {
+                mFavoriteHandler = WeakReference(favHandler)
             }
         }
 
