@@ -11,8 +11,8 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="popupMenuStyle">@style/PopupMenu</item>
+        <item name="android:navigationBarColor">#ff000000</item>
     </style>
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
 
 
@@ -23,5 +23,10 @@
 
     <style name="myCustomMenuTextApearance" parent="@android:style/TextAppearance.Widget.IconMenu.Item">
         <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="MyActionBar"
+           parent="@android:style/Widget.Holo.Light.ActionBar.Solid.Inverse">
+        <item name="android:background">#000000</item>
     </style>
 </resources>

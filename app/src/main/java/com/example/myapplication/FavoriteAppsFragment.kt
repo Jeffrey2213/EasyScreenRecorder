@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import android.content.*
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
@@ -9,12 +10,12 @@ import android.support.v4.content.LocalBroadcastManager
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.PopupMenu
 import java.lang.ref.WeakReference
+import android.content.Intent
+
+
 
 class FavoriteAppsFragment() : Fragment() {
     private lateinit var mInfoManager : AppInfoManager
@@ -67,6 +68,7 @@ class FavoriteAppsFragment() : Fragment() {
         var MSG_UPDATE_APPINFO = 0
         var MSG_ADD_FAVORITE = 1
         var MSG_REMOVE_FAVORITE = 2
+        var MSG_UNINSTALL = 3
 
         class UIHandler : Handler {
             private  var mFavorite = ArrayList<String>()
@@ -125,46 +127,46 @@ class FavoriteAppsFragment() : Fragment() {
                         }
                         if (addFavorite) {
                             mFavorite.add(favName)
-                            var navList: ArrayList<AppInfo> = ArrayList<AppInfo>()
-                            if (mAppList!! != null && !mAppList!!.isEmpty()) {
-                                for (appInfo: AppInfo in mAppList!!) {
-                                    for (favorite: String in mFavorite) {
-                                        if (appInfo.getPackageName().toLowerCase().compareTo(favorite.toLowerCase()) == 0) {
-                                            navList.add(appInfo)
-                                        }
-                                    }
-                                }
-                                if (mViewAdapter != null && mRecyclerView != null && mItemClick != null) {
-                                    mViewAdapter.updateData(navList)
-                                    mItemClick.updateData(navList)
-                                    mRecyclerView!!.get()!!.adapter!!.notifyDataSetChanged()
-                                }
-                            }
+                            notifyAllDataChanged()
                         }
 
                     }
 
                     MSG_REMOVE_FAVORITE -> {
-                        var removePosition = msg.arg1
-                        mFavorite.removeAt(removePosition)
+                        mFavorite.removeAt(msg.arg1)
+                        notifyAllDataChanged()
+                    }
 
-                        var navList: ArrayList<AppInfo> = ArrayList<AppInfo>()
-                        if (mAppList!! != null && !mAppList!!.isEmpty()) {
-                            for (appInfo: AppInfo in mAppList!!) {
-                                for (favorite: String in mFavorite) {
-                                    if (appInfo.getPackageName().toLowerCase().compareTo(favorite.toLowerCase()) == 0) {
-                                        navList.add(appInfo)
-                                    }
-                                }
-                            }
-                            if (mViewAdapter != null && mRecyclerView != null && mItemClick != null) {
-                                mViewAdapter.updateData(navList)
-                                mItemClick.updateData(navList)
-                                mRecyclerView!!.get()!!.adapter!!.notifyDataSetChanged()
+                    MSG_UNINSTALL -> {
+                        var pkg = mFavorite.get(msg.arg1)
+                        var handler = MainApplication.getMainActivityHandler()
+                        var msg = handler.obtainMessage(MainActivity.Companion.MainUIHandler.MSG_UNINSTALL_APP)
+                        msg.obj = pkg
+                        handler.sendMessage(msg)
+                    }
+                }
+            }
+
+            private fun notifyAllDataChanged() {
+                var navList: ArrayList<AppInfo> = ArrayList<AppInfo>()
+                var tmpList = ArrayList<String>()
+                if (mAppList!! != null && !mAppList!!.isEmpty()) {
+                    for (appInfo: AppInfo in mAppList!!) {
+                        for (favorite: String in mFavorite) {
+                            if (appInfo.getPackageName().toLowerCase().compareTo(favorite.toLowerCase()) == 0) {
+                                navList.add(appInfo)
+                                tmpList.add(appInfo.getPackageName())
                             }
                         }
                     }
+                    if (mViewAdapter != null && mRecyclerView != null && mItemClick != null) {
+                        mViewAdapter.updateData(navList)
+                        mItemClick.updateData(navList)
+                        mRecyclerView!!.get()!!.adapter!!.notifyDataSetChanged()
+                    }
                 }
+                mFavorite.clear()
+                mFavorite.addAll(tmpList)
             }
         }
 
@@ -201,11 +203,18 @@ class FavoriteAppsFragment() : Fragment() {
                 tmp.addAll(list)
                 mAppInfoList = tmp
             }
-            override fun onMenuItemClick(item: MenuItem?): Boolean {
-                Log.i("jeffrey-dbg","fragment longpress = " + mLongPressPosition)
-                var message = mFavoriteHandler.get()!!.obtainMessage(MSG_REMOVE_FAVORITE)
-                message.arg1 = mLongPressPosition
-                mFavoriteHandler.get()!!.sendMessage(message)
+            override fun onMenuItemClick(item: MenuItem): Boolean {
+                var title = item.title.toString()
+                if ("UnInstall".compareTo(title) == 0) {
+                    var message = mFavoriteHandler.get()!!.obtainMessage(MSG_UNINSTALL)
+                    message.arg1 = mLongPressPosition
+                    mFavoriteHandler.get()!!.sendMessage(message)
+                }
+                if ("Remove shortcut".compareTo(title) == 0) {
+                    var message = mFavoriteHandler.get()!!.obtainMessage(MSG_REMOVE_FAVORITE)
+                    message.arg1 = mLongPressPosition
+                    mFavoriteHandler.get()!!.sendMessage(message)
+                }
                 return true
             }
             fun setFavoriteHandler(favHandler : UIHandler) {

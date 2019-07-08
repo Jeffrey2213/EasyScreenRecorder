@@ -11,9 +11,11 @@ import android.util.Log
 
 import kotlinx.android.synthetic.main.activity_main.*
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Handler
 import android.os.Message
 import android.support.design.widget.NavigationView
@@ -150,6 +152,7 @@ class MainActivity : AppCompatActivity() {
         class MainUIHandler : Handler() {
             companion object {
                 var MSG_LAUNCH_APP = 0
+                var MSG_UNINSTALL_APP = 1
             }
             override fun handleMessage(msg: Message) {
                 super.handleMessage(msg)
@@ -158,6 +161,11 @@ class MainActivity : AppCompatActivity() {
                         var packageName = msg!!.obj as String
                         var intent = MainApplication.getMainPackageManager().getLaunchIntentForPackage(packageName)
                         startActivity(MainApplication.getMainApplicationContext(), intent!!)
+                    }
+                    MSG_UNINSTALL_APP -> {
+                        var packageURI = Uri.parse("package:" + msg.obj as String);
+                        var uninstallIntent = Intent(Intent.ACTION_DELETE, packageURI);
+                        startActivity(MainApplication.getMainApplicationContext(), uninstallIntent);
                     }
                 }
             }
@@ -293,7 +301,6 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onMenuItemClick(item: MenuItem?): Boolean {
-                Log.i("jeffrey-dbg","menuitemclick = " +mLongPressPosition)
                 var appInfo  = mAdapter.get()!!.getItem(mLongPressPosition) as AppInfo
                 var intent = Intent(FavoriteAppsFragment.ADD_TO_FAVORITE)
                 intent.putExtra("favorite", appInfo.getPackageName())
@@ -305,5 +312,14 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration?) {
+        super.onConfigurationChanged(newConfig)
+    }
 
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
 }
